@@ -42,7 +42,7 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg FIREBASE_ADMIN_KEY="$FIREBASE_ADMIN_KEY" \
+            --build-arg FIREBASE_SERVICE_ACCOUNT="$FIREBASE_ADMIN_KEY" \
             -t ${{ secrets.DOCKER_USERNAME }}/tarzon_store_admin:latest .
 
       - name: Push Docker image
