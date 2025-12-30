@@ -24,7 +24,6 @@ export async function middleware(req) {
       return NextResponse.redirect(url);
     }
 
-    // ✅ Allow the request to continue
     return NextResponse.next();
 
   } catch (err) {
@@ -34,14 +33,10 @@ export async function middleware(req) {
   }
 }
 
-
-
-
-export const config = {
-  matcher: [
-    "/orders:path*",
-    "/products/:path*",
-    "/settings/:path*",
-    "/api/admin/:path*"
-  ],
-};
+// ✅ NEW WAY (NO config OBJECT)
+export const matcher = [
+  "/orders/:path*",
+  "/products/:path*",
+  "/settings/:path*",
+  "/api/admin/:path*",
+];
