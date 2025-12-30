@@ -22,7 +22,7 @@ jobs:
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
 
       # 🔥 Backend-only secrets (NOT public)
-      FIREBASE_ADMIN_KEY: ${{ secrets.FIREBASE_ADMIN_KEY }}
+      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
       CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
@@ -42,7 +42,7 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg FIREBASE_SERVICE_ACCOUNT="$FIREBASE_ADMIN_KEY" \
+           --build-arg FIREBASE_SERVICE_ACCOUNT="$FIREBASE_SERVICE_ACCOUNT" \
             -t ${{ secrets.DOCKER_USERNAME }}/tarzon_store_admin:latest .
 
       - name: Push Docker image
