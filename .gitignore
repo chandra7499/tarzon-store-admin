@@ -13,12 +13,15 @@
 # testing
 /coverage
 
+tanzon-store-firebase-adminsdk-fbsvc-c086246258.json
+
 # next.js
 /.next/
 /out/
 
 # production
 /build
+/public/Flux_Dev_a_dynamic_illustration_of_Tarzan_with_a_lush_green_fo_0 Background Removed.png
 
 # misc
 .DS_Store
