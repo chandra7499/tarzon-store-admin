@@ -5,19 +5,18 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-# 🔥 ACCEPT BUILD ARG
-ARG FIREBASE_SERVICE_ACCOUNT
+# ✅ DO NOT set NODE_ENV=production here
+# We NEED devDependencies (tailwind, postcss)
 
-# 🔥 MAKE IT AVAILABLE DURING BUILD
+ARG FIREBASE_SERVICE_ACCOUNT
 ENV FIREBASE_SERVICE_ACCOUNT=$FIREBASE_SERVICE_ACCOUNT
-ENV NODE_ENV=production
 
 COPY package*.json ./
 RUN npm install
 
 COPY . .
 
-# 🔥 NEXT BUILD NOW SEES FIREBASE ENV
+# ✅ Build with devDependencies present
 RUN npm run build
 
 # ----------------------
@@ -26,6 +25,8 @@ RUN npm run build
 FROM node:24-alpine
 
 WORKDIR /app
+
+# ✅ NOW set production
 ENV NODE_ENV=production
 
 COPY --from=builder /app/package*.json ./
