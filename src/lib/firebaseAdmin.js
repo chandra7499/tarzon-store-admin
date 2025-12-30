@@ -4,7 +4,7 @@ import admin from "firebase-admin";
 const initializeFirebaseAdmin = () => {
   if (!admin.apps.length) {
     // Use ONLY environment variables - no dynamic imports
-    if (!process.env.FIREBASE_ADMIN_KEY) {
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
       throw new Error(
         'FIREBASE_SERVICE_ACCOUNT environment variable is missing. ' +
         'It should contain the entire service account JSON as a string.'
@@ -13,7 +13,7 @@ const initializeFirebaseAdmin = () => {
 
     try {
     
-        const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_KEY);
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
       
       admin.initializeApp({
