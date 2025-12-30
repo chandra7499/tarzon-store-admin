@@ -8,7 +8,7 @@ WORKDIR /app
 # ✅ DO NOT set NODE_ENV=production here
 # We NEED devDependencies (tailwind, postcss)
 
-ARG FIREBASE_SERVICE_ACCOUNT
+
 ENV FIREBASE_SERVICE_ACCOUNT=$FIREBASE_SERVICE_ACCOUNT
 
 COPY package*.json ./
