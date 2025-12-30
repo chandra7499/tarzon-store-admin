@@ -1,4 +1,6 @@
 // api/products/edit/[id]
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { admin } from "@/lib/firebaseAdmin";
 import { cloudinaryUpload } from "../../../cloudUploads/cloudUpload";

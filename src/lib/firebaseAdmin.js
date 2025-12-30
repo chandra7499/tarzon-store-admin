@@ -1,46 +1,32 @@
 // src/lib/firebaseAdmin.js
 import admin from "firebase-admin";
 
-const initializeFirebaseAdmin = () => {
-  if (!admin.apps.length) {
-    // Use ONLY environment variables - no dynamic imports
+let isInitialized = false;
+
+export function getAdmin() {
+  if (!isInitialized) {
     if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-      throw new Error(
-        'FIREBASE_SERVICE_ACCOUNT environment variable is missing. ' +
-        'It should contain the entire service account JSON as a string.'
-      );
+      throw new Error("FIREBASE_SERVICE_ACCOUNT missing");
     }
 
-    try {
-    
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-      
+    if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
-      
-      console.log('Firebase Admin initialized successfully');
-    } catch (error) {
-      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT:', error);
-      throw error;
     }
+
+    isInitialized = true;
   }
+
   return admin;
-};
-
-// Initialize immediately
-initializeFirebaseAdmin();
-
-
-export async function verifyFirebaseToken(token) {
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    return decodedToken; // contains uid, email, custom claims (role)
-  } catch (error) {
-    console.error("Token verification failed:", error);
-    throw new Error("Invalid or expired token");
-  }
 }
 
+// ✅ KEEP exporting admin (for legacy usage)
 export { admin };
+
+export async function verifyFirebaseToken(token) {
+  const adminApp = getFirebaseAdmin();
+  return await adminApp.auth().verifyIdToken(token);
+}

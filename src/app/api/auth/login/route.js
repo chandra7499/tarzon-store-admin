@@ -1,4 +1,5 @@
 // api/auth/login/route.js
+export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { signInWithEmailAndPassword } from "firebase/auth";
