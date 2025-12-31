@@ -2,78 +2,63 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebaseConfig";
-import { admin } from "@/lib/firebaseAdmin";
+import { getAdmin } from "@/lib/firebaseAdmin";
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const authHeader = request.headers.get("authorization");
 
-    if (!email || !password) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(
-        { success: false, message: "Email and password are required" },
-        { status: 400 }
+        { success: false, message: "Missing token" },
+        { status: 401 }
       );
     }
 
-    //Step-1 firebase signIn
-    const AdminCredentials = await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const user = AdminCredentials.user;
+    const idToken = authHeader.split("Bearer ")[1];
 
-    //step-2 get firebase ID
-    const idToken = await user.getIdToken();
+    const admin = getAdmin();
 
-    //Verify admin in firestore
-    const adminDocRef = await admin.firestore().collection("admins").where("email", "==", email).get();
-  
+    // ✅ Verify token (SERVER SAFE)
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
 
-    if (adminDocRef.empty) {
+    const email = decodedToken.email;
+
+    // ✅ Check admin in Firestore
+    const adminSnap = await admin
+      .firestore()
+      .collection("admins")
+      .where("email", "==", email)
+      .limit(1)
+      .get();
+
+    if (adminSnap.empty) {
       return NextResponse.json(
         { success: false, message: "Admin not found" },
-        { status: 400 }
+        { status: 403 }
       );
     }
 
-    //get admin data
-
-    const adminDocSnap = adminDocRef.docs[0];
-
-    const adminData = adminDocSnap.data();
+    const adminData = adminSnap.docs[0].data();
 
     if (adminData.status !== "active") {
       return NextResponse.json(
         { success: false, message: "Admin is inactive" },
-        { status: 400 }
+        { status: 403 }
       );
     }
 
-    //verify the token by firebase admintoken for secure
-   await admin.auth().verifyIdToken(idToken);
-
-    //cookie for authentication presistence
-
-    const response = NextResponse.json(
-      {
-        success: true,
-        message: "Admin logged in successfully",
-        admin: {
-          fullName: adminData.fullName,
-          email: adminData.email,
-          role: adminData.role,
-          premissions: adminData.permissions,
-        },
+    const response = NextResponse.json({
+      success: true,
+      admin: {
+        fullName: adminData.fullName,
+        email: adminData.email,
+        role: adminData.role,
+        permissions: adminData.permissions,
       },
-      { status: 200 }
-    );
+    });
 
-    //set cookie
-
+    // ✅ Secure cookie
     response.cookies.set("tarzon_admin_token", idToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

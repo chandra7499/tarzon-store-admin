@@ -1,30 +1,66 @@
 "use client";
 
+"use client";
+
 import { clearAdmin, setAdmin } from "@/Global_States/adminSlice";
 import axios from "axios";
-import { signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
-//initalize firestore app
 
+// 🔐 Admin Login
 export const handleAdminAuth = async (e, dispatch, router) => {
   e.preventDefault();
-  const formdata = new FormData(e.target);
-  const form = Object.fromEntries(formdata.entries());
+
+  const formData = new FormData(e.target);
+  const { email, password } = Object.fromEntries(formData.entries());
+
   try {
-    const res = await axios.post("/api/auth/login", form);
+    // ✅ STEP 1: Firebase CLIENT login
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    const user = userCredential.user;
+
+    // ✅ STEP 2: Get Firebase ID Token
+    const idToken = await user.getIdToken();
+
+    // ✅ STEP 3: Send token to API
+    const res = await axios.post(
+      "/api/auth/login",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
+    );
+
     const result = res.data;
+
     if (!result.success) {
       return result.message;
     }
-    console.log(result.message);
-    dispatch(setAdmin({ admin: result.admin.role, isAuthenticated: true }));
+
+    dispatch(
+      setAdmin({
+        admin: result.admin.role,
+        isAuthenticated: true,
+      })
+    );
 
     router.push("/");
   } catch (err) {
-    console.log(err.response.data.message);
-    return err.response.data.message;
+    console.error("Login error:", err);
+    return (
+      err?.response?.data?.message ||
+      "Invalid email or password"
+    );
   }
 };
+
 
 //Handle Logout State
 export const handleLogout = async (dispatch, router) => {
