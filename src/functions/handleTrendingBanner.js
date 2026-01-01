@@ -4,15 +4,21 @@ export async function handleTrendingBanner() {
   try {
     const res = await axios.get("/api/trendingbanner");
     const result = res.data;
-    if (!result.success) {
-      console.log("trending products not found");
-      return;
+
+    if (!result?.success) {
+      return { data: [], error: "Trending products not found" };
     }
-    return { data: result.data };
+
+    return { data: result.data, error: null };
+
   } catch (error) {
-    return { error: error.message };
+    return {
+      data: [],
+      error: error?.message || "Something went wrong",
+    };
   }
 }
+
 
 export async function handleAddTrendingBanner(data) {
   try {

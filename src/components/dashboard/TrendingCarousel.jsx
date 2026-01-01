@@ -26,16 +26,24 @@ const TrendingCarousel = () => {
   useEffect(() => {
     async function getTrending() {
       setLoading(true);
+
       const result = await handleTrendingBanner();
-      if (result.error) {
+
+      if (!result || result.error) {
         setTrending([]);
         setLoading(false);
         return;
       }
-      setTrending(result?.data.flatMap((doc) => doc.items));
+
+      setTrending(
+        Array.isArray(result.data)
+          ? result.data.flatMap((doc) => doc?.items || [])
+          : []
+      );
+
       setLoading(false);
-      console.log(result?.data);
     }
+
     getTrending();
   }, []);
 
@@ -98,7 +106,12 @@ const TrendingCarousel = () => {
         {/* Header */}
         <div className="flex-1 items-center justify-between px-2 md:px-6">
           <h2 className="md:text-3xl flex font-bold tracking-tight text-white">
-            🔥 Trending Products    {loading && <div className="block text-gray-500 text-md ml-5">Fetching...</div>}
+            🔥 Trending Products{" "}
+            {loading && (
+              <div className="block text-gray-500 text-md ml-5">
+                Fetching...
+              </div>
+            )}
           </h2>
           <span className="text-sm  text-gray-400 text-muted-foreground">
             Explore what’s popular this week
@@ -132,7 +145,6 @@ const TrendingCarousel = () => {
                 >
                   <Card className="group  border-none shadow-2xl min-w-[12rem]  max-h-[33rem]  max-w-[1200px]  w-full overflow-hidden rounded-3xl bg-black p-0">
                     <CardContent className="p-0 relative max-w-[1200px]  max-h-[33rem]">
-                   
                       <Image
                         src={item.image}
                         alt={item.link}

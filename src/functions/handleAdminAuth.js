@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { clearAdmin, setAdmin } from "@/Global_States/adminSlice";
 import axios from "axios";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";

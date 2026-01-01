@@ -2,14 +2,16 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { admin } from "@/lib/firebaseAdmin";
+import { getAdmin } from "@/lib/firebaseAdmin";
 import { cloudinaryUpload } from "../../api/cloudUploads/cloudUpload";
-import { randomUUID } from 'crypto';
-
+import { randomUUID } from "crypto";
 
 export async function GET() {
   try {
-    const productsData = await admin.firestore().collection("products").get();
+    const productsData = await getAdmin()
+      .firestore()
+      .collection("products")
+      .get();
     const data = productsData.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
@@ -19,8 +21,6 @@ export async function GET() {
     return NextResponse.json({ success: false, error });
   }
 }
-
-
 
 export async function POST(request) {
   try {
@@ -34,8 +34,12 @@ export async function POST(request) {
 
     // ---- Upload main product images ----
     const uploadedImages = await Promise.all(
-      (data.images || []).map((image,index) =>
-        cloudinaryUpload(image, "Products", `${data.name}_${index}_${randomUUID()}`)
+      (data.images || []).map((image, index) =>
+        cloudinaryUpload(
+          image,
+          "Products",
+          `${data.name}_${index}_${randomUUID()}`
+        )
       )
     );
 
@@ -44,7 +48,8 @@ export async function POST(request) {
       const bannerUrl = await cloudinaryUpload(
         data.brand.Banner,
         "Banners",
-        `${data.brand.brandName}_${randomUUID()}` || `${data.name}_${randomUUID()}`
+        `${data.brand.brandName}_${randomUUID()}` ||
+          `${data.name}_${randomUUID()}`
       );
       data.brand.Banner = bannerUrl;
     }
@@ -52,12 +57,17 @@ export async function POST(request) {
     // ---- Upload feature images ----
     if (Array.isArray(data.features)) {
       const uploadedFeatures = await Promise.all(
-        data.features.map(async (feature,index) => {
+        data.features.map(async (feature, index) => {
           if (!Array.isArray(feature.images)) return feature;
 
           const uploadedFeatureImages = await Promise.all(
-            feature.images.map((img,index2) =>
-              cloudinaryUpload(img, "Features", `${feature.title}_${index}_${index2}_${randomUUID()}` || `${data.name}_${index}_${index2}_${randomUUID()}`)
+            feature.images.map((img, index2) =>
+              cloudinaryUpload(
+                img,
+                "Features",
+                `${feature.title}_${index}_${index2}_${randomUUID()}` ||
+                  `${data.name}_${index}_${index2}_${randomUUID()}`
+              )
             )
           );
 
@@ -74,7 +84,9 @@ export async function POST(request) {
     data.images = uploadedImages;
 
     // ---- Reference brand in Firestore ----
-    const brandSnap = await admin.firestore().doc(`Brands/${data.brand.brandName}`);
+    const brandSnap = await getAdmin()
+      .firestore()
+      .doc(`Brands/${data.brand.brandName}`);
     const brandRef = await brandSnap.get();
 
     if (!brandSnap.exists) {
@@ -86,7 +98,7 @@ export async function POST(request) {
 
     data.brand = brandRef.ref;
     // ---- Save to Firestore ----
-    await admin.firestore().collection("products").add(data);
+    await getAdmin().firestore().collection("products").add(data);
 
     return NextResponse.json({
       success: true,
@@ -101,4 +113,3 @@ export async function POST(request) {
     });
   }
 }
-

@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { admin } from "@/lib/firebaseAdmin";
+import { getAdmin} from "@/lib/firebaseAdmin";
 
 export async function POST(request) {
   try {
@@ -21,7 +21,7 @@ export async function POST(request) {
     //verification email
     let verificationOfEmail;
     try {
-      verificationOfEmail = await admin.auth().getUserByEmail(email);
+      verificationOfEmail = await getAdmin().auth().getUserByEmail(email);
     } catch (error) {
       return NextResponse.json(
         {
@@ -33,7 +33,7 @@ export async function POST(request) {
       );
     }
 
-    const adminDetails = admin.firestore().collection("admins").where("email", "==", email).limit(1);
+    const adminDetails = getAdmin().firestore().collection("admins").where("email", "==", email).limit(1);
     const verifyAdmin = await adminDetails.get();
     if(verifyAdmin.empty){
       return NextResponse.json(
@@ -45,7 +45,7 @@ export async function POST(request) {
       );
     }
 
-    const status = await admin.auth().generatePasswordResetLink(email);
+    const status = await getAdmin().auth().generatePasswordResetLink(email);
     return NextResponse.json({ success: true, message:"Check your email" }, { status: 200 });
   } catch (error) {
     console.log(error);

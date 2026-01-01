@@ -73,7 +73,7 @@ const SideBar = () => {
       {/* Header */}
       <SidebarHeader className="flex items-center gap-3 p-4 border-b shrink-0 border-gray-100">
         <Image
-          src="../../public/"
+          src="/vercel.svg"
           width={48}
           height={48}
           className={clsx(

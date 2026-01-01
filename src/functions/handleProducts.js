@@ -5,27 +5,28 @@ const cache = new NodeCache({ stdTTL: 60 });
 export async function handleProducts() {
   try {
     const cacheKey = "products";
-    const data = cache.get(cacheKey);
+    const cached = cache.get(cacheKey);
 
-    if (data) {
-      console.log("refetching cache data...");
-      console.log(data);
-      return data;
+    if (Array.isArray(cached)) {
+      console.log("using cached products");
+      return { data: cached, error: null };
     }
-    const productData = await axios.get("/api/products");
-    const res = productData.data;
 
-    if (!res.success) {
-      return res;
+    const res = await axios.get("/api/products");
+
+    if (!res.data?.success || !Array.isArray(res.data.data)) {
+      return { data: [], error: "Products not found" };
     }
-    cache.set(cacheKey, res.data);
-    console.log(res.data);
-    return res.data;
+
+    cache.set(cacheKey, res.data.data);
+    return { data: res.data.data, error: null };
+
   } catch (error) {
-    console.log(error);
-    return error;
+    console.error(error);
+    return { data: [], error: error.message };
   }
 }
+
 
 export async function handleAddProduct(data) {
   try {

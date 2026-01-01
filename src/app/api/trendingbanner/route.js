@@ -2,10 +2,11 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { admin } from "@/lib/firebaseAdmin";
+import { getAdmin } from "@/lib/firebaseAdmin";
 import cloudinary from "@/clouds/cloudinaryConfig";
 import {randomBytes} from "crypto"
 
+const admin = getAdmin();
 export async function GET() {
   try {
     const docRef = await admin.firestore().collection("TrendingBanners").get();

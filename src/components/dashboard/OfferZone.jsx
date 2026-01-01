@@ -27,6 +27,8 @@ const OfferZone = () => {
     fetchOffers();
   }, []);
 
+  console.log(offers);
+
   function handleDropSlide() {
     setOfferDropSlide((prev) => !prev);
   }
