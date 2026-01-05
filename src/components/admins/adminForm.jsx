@@ -2,6 +2,9 @@
 import { useState } from "react";
 import {Button} from "../ui/button";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import {auth, db} from "@/lib/firebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+
 
 const ALL_PERMISSIONS = [
   "view_products",

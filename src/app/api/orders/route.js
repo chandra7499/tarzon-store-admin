@@ -2,10 +2,11 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { admin } from "@/lib/firebaseAdmin";
+import { getAdmin } from "@/lib/firebaseAdmin";
 import axios from "axios";
 const baseUrl = process.env.NEXT_BASE_URL;
 
+const admin = getAdmin();
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);

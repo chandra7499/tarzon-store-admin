@@ -5,7 +5,9 @@ import clsx from "clsx";
 import { usePathname, useRouter } from "next/navigation";
 import { handleLogout } from "@/functions/handleAdminAuth";
 import { useDispatch } from "react-redux";
-import { useState} from "react";
+import { useState, useEffect} from "react";
+import { useSelector } from "react-redux";
+import {setAdmin} from "@/Global_States/adminSlice";
 
 import {
   Sidebar,
@@ -34,12 +36,16 @@ import Image from "next/image";
 import { Spinner } from "./ui/spinner";
 
 
+
 const SideBar = () => {
   const pathname = usePathname();
   const { open } = useSidebar();
   const dispatch = useDispatch();
   const router = useRouter();
   const [Loading, setLoading] = useState(false);
+  const adminState = useSelector((state) => state.admin);
+  const admin = adminState?.admin;
+ 
   // const admin = useSelector((state) => state.admin?.isAuthenticated);
   // const router = useRouter();
 
@@ -53,6 +59,36 @@ const SideBar = () => {
     { operation: "Manage Admins", path: "/admins", icon: GraduationCap },
   ];
 
+  
+ useEffect(() => {
+  async function fetchAdmin() {
+    try {
+      const res = await fetch("/api/auth/check/me", {
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      console.log("ME API:", data);
+
+      if (data.authenticated) {
+        dispatch(
+          setAdmin({
+            admin: data.admin,
+            isAuthenticated: true,
+          })
+        );
+      }
+    } catch (err) {
+      console.error("Fetch admin failed:", err);
+    }
+  }
+
+  fetchAdmin();
+}, [dispatch]);
+
+
+
+console.log("admin",admin);
   async function handleLoginState() {
     try {
       setLoading(true);
@@ -73,19 +109,19 @@ const SideBar = () => {
       {/* Header */}
       <SidebarHeader className="flex items-center gap-3 p-4 border-b shrink-0 border-gray-100">
         <Image
-          src="/vercel.svg"
-          width={48}
-          height={48}
+          src={admin?.profile || "/vercel.svg"}
+          width={35}
+          height={30}
           className={clsx(
-            `rounded-full object-cover  ${
-              !open && "lg:scale-[2.5]"
-            } scale-[1.5]  transition-all duration-100 shadow-inner shadow-slate-800`
+            `rounded-full object-cover  p-1 ${
+              !open && "lg:scale-[2.0]"
+            } scale-[1.5]  transition-all  duration-100 rounded-full shadow-inner shadow-slate-800`
           )}
           alt="Logo"
           priority
         />
         {open && (
-          <span className="font-semibold text-lg truncate  overflow-hidden flex flex-shrink-0 w-full justify-center">
+          <span className="font-semibold text-lg truncate  overflow-hidden flex shrink-0 w-full justify-center">
             Tarzon Admin
           </span>
         )}

@@ -13,19 +13,16 @@ export const handleAdminAuth = async (e, dispatch, router) => {
   const { email, password } = Object.fromEntries(formData.entries());
 
   try {
-    // ✅ STEP 1: Firebase CLIENT login
+    // 1️⃣ Firebase login
     const userCredential = await signInWithEmailAndPassword(
       auth,
       email,
       password
     );
 
-    const user = userCredential.user;
+    const idToken = await userCredential.user.getIdToken();
 
-    // ✅ STEP 2: Get Firebase ID Token
-    const idToken = await user.getIdToken();
-
-    // ✅ STEP 3: Send token to API
+    // 2️⃣ Backend login
     const res = await axios.post(
       "/api/auth/login",
       {},
@@ -38,26 +35,31 @@ export const handleAdminAuth = async (e, dispatch, router) => {
 
     const result = res.data;
 
-    if (!result.success) {
-      return result.message;
-    }
-
+    // 3️⃣ Success
     dispatch(
       setAdmin({
-        admin: result.admin.role,
+        admin: result.admin,
         isAuthenticated: true,
       })
     );
 
     router.push("/");
+    return null;
+
   } catch (err) {
-    console.error("Login error:", err);
-    return (
-      err?.response?.data?.message ||
-      "Invalid email or password"
-    );
+    // ✅ THIS IS WHERE 403 LANDS
+    if (err.response?.status === 403) {
+      return err.response.data.message; // "Not an admin"
+    }
+
+    if (err.response?.status === 401) {
+      return "Invalid credentials";
+    }
+
+    return "Login failed. Please try again.";
   }
 };
+
 
 
 //Handle Logout State

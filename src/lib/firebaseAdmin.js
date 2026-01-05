@@ -1,37 +1,27 @@
 import admin from "firebase-admin";
 
-let isInitialized = false;
-
 export function getAdmin() {
-  if (!isInitialized) {
-    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-      throw new Error("FIREBASE_SERVICE_ACCOUNT missing");
+  if (!admin.apps.length) {
+    if (
+      !process.env.FIREBASE_PROJECT_ID ||
+      !process.env.FIREBASE_CLIENT_EMAIL ||
+      !process.env.FIREBASE_PRIVATE_KEY
+    ) {
+      throw new Error("Firebase Admin env vars missing");
     }
 
-    // 1. Parse the JSON string
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
-    // 2. FIX: Replace literal \n with actual newlines to fix the Decoder error
-    if (serviceAccount.private_key) {
-      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-    }
-
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      });
-    }
-
-    isInitialized = true;
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      }),
+    });
   }
 
   return admin;
 }
 
-// Keep your existing exports
-export { admin };
-
 export async function verifyFirebaseToken(token) {
-  const adminApp = getAdmin(); // Ensure you call getAdmin() here, not getFirebaseAdmin() which might be undefined in your snippet
-  return await adminApp.auth().verifyIdToken(token);
+  return getAdmin().auth().verifyIdToken(token);
 }
