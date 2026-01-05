@@ -1,22 +1,48 @@
 "use client";
+
 import { useState } from "react";
-import {Button} from "../ui/button";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import {auth, db} from "@/lib/firebaseConfig";
+import { auth, db } from "@/lib/firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
+/* ---------------- PERMISSIONS ---------------- */
 
 const ALL_PERMISSIONS = [
   "view_products",
   "edit_products",
-  "manage_users",
-  "manage_admins",
+  "manage_products",
   "view_orders",
   "manage_orders",
+  "manage_users",
+  "manage_admins",
   "manage_categories",
 ];
 
+const ROLE_PERMISSIONS = {
+  admin: [
+    "view_products",
+    "edit_products",
+    "view_orders",
+    "manage_orders",
+  ],
+  manager: [
+    "view_products",
+    "edit_products",
+    "manage_products",
+    "view_orders",
+    "manage_orders",
+    "manage_categories",
+  ],
+  editor: [
+    "view_products",
+    "edit_products",
+  ],
+  superadmin: "ALL",
+};
+
 const ROLES = ["admin", "manager", "editor", "superadmin"];
+
+/* ---------------- COMPONENT ---------------- */
 
 const CreateAdminPage = () => {
   const [form, setForm] = useState({
@@ -24,12 +50,27 @@ const CreateAdminPage = () => {
     email: "",
     password: "",
     role: "admin",
-    profile: "", // base64 image
-    permissions: [],
+    profile: "",
+    permissions: ROLE_PERMISSIONS.admin,
   });
 
   const [loading, setLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+
+  /* ---------- HANDLE ROLE CHANGE ---------- */
+
+  const handleRoleChange = (role) => {
+    setForm((prev) => ({
+      ...prev,
+      role,
+      permissions:
+        ROLE_PERMISSIONS[role] === "ALL"
+          ? ALL_PERMISSIONS
+          : ROLE_PERMISSIONS[role],
+    }));
+  };
+
+  /* ---------- HANDLE PERMISSION TOGGLE ---------- */
 
   const handleCheckbox = (perm) => {
     setForm((prev) => ({
@@ -40,18 +81,21 @@ const CreateAdminPage = () => {
     }));
   };
 
-  // Convert image to base64
+  /* ---------- IMAGE ---------- */
+
   const handleProfileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setForm({ ...form, profile: reader.result }); // base64 string
+      setForm((prev) => ({ ...prev, profile: reader.result }));
       setPreviewImage(reader.result);
     };
     reader.readAsDataURL(file);
   };
+
+  /* ---------- SUBMIT ---------- */
 
   const handleSubmit = async () => {
     if (!form.fullName || !form.email || !form.password)
@@ -60,17 +104,17 @@ const CreateAdminPage = () => {
     try {
       setLoading(true);
 
-      // Create Auth login for admin
       const res = await createUserWithEmailAndPassword(
         auth,
         form.email,
         form.password
       );
-      const adminId = res.user.uid;
 
-      // Store data in Firestore
+      const adminId = res.user.uid;
+      const { password, ...safeForm } = form; // ❌ never store password
+
       await setDoc(doc(db, "admins", adminId), {
-        ...form,
+        ...safeForm,
         status: "active",
         createdAt: serverTimestamp(),
         lastLogin: null,
@@ -84,99 +128,87 @@ const CreateAdminPage = () => {
         password: "",
         role: "admin",
         profile: "",
-        permissions: [],
+        permissions: ROLE_PERMISSIONS.admin,
       });
       setPreviewImage(null);
     } catch (err) {
-      console.log(err);
+      console.error(err);
       alert(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  /* ---------- UI ---------- */
+
   return (
     <div className="flex justify-center items-center py-6 px-3">
-      <div className="w-full max-w-xl bg-black shadow-xl rounded-xl p-6 space-y-5">
+      <div className="w-full max-w-xl bg-black rounded-xl p-6 space-y-5">
         <h1 className="text-2xl font-bold text-slate-400">
           Create Admin Account
         </h1>
 
-        <div className="space-y-3">
-          <input
-            type="text"
-            placeholder="Full name"
-            className="w-full border rounded p-2"
-            value={form.fullName}
-            onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+        {/* BASIC INFO */}
+        <input
+          type="text"
+          placeholder="Full name"
+          className="w-full p-2 rounded"
+          value={form.fullName}
+          onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+        />
+
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full p-2 rounded"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full p-2 rounded"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+        />
+
+        {/* ROLE */}
+        <select
+          className="w-full p-2 rounded"
+          value={form.role}
+          onChange={(e) => handleRoleChange(e.target.value)}
+        >
+          {ROLES.map((role) => (
+            <option key={role} value={role}>
+              {role.toUpperCase()}
+            </option>
+          ))}
+        </select>
+
+        {/* PROFILE */}
+        <p className="text-slate-300">Profile Image</p>
+        <input type="file" accept="image/*" onChange={handleProfileUpload} />
+        {previewImage && (
+          <img
+            src={previewImage}
+            className="w-24 h-24 rounded-full border"
           />
+        )}
 
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full border rounded p-2"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full border rounded p-2"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-
-          {/* Role dropdown */}
-          <select
-            className="w-full border rounded p-2"
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
-          >
-            {ROLES.map((role) => (
-              <option key={role} value={role}>
-                {role.toUpperCase()}
-              </option>
-            ))}
-          </select>
-
-          {/* Profile File Input */}
-        <p className="text-slate-300">Select Profile Image</p>
-          <div className="space-y-2 flex flex-col items-center">
-            <Button asChild variant="outline" ><label htmlFor="admin-profile">Upload Profile</label></Button>
-            <input
-              type="file"
-              id="admin-profile"
-              hidden
-              accept="image/*"
-              className="text-white"
-              onChange={handleProfileUpload}
-            />
-            {previewImage && (
-              <img
-                src={previewImage}
-                alt="Preview"
-                className="w-24 h-24 rounded-full object-cover border-2 border-white"
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Permissions */}
+        {/* PERMISSIONS */}
         <div>
-          <p className="font-medium text-slate-400 mb-1">Permissions</p>
+          <p className="text-slate-400 mb-1">Permissions</p>
           <div className="grid grid-cols-2 gap-2">
             {ALL_PERMISSIONS.map((perm) => (
-              <label
-                key={perm}
-                className="flex items-center gap-2 cursor-pointer"
-              >
+              <label key={perm} className="flex gap-2 text-white">
                 <input
                   type="checkbox"
                   checked={form.permissions.includes(perm)}
                   onChange={() => handleCheckbox(perm)}
+                  disabled={form.role === "superadmin"}
                 />
-                <span className="text-sm text-white">{perm}</span>
+                {perm}
               </label>
             ))}
           </div>
@@ -185,7 +217,7 @@ const CreateAdminPage = () => {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full py-2 rounded bg-sky-700 text-white font-bold text-lg hover:bg-sky-800 transition disabled:opacity-60"
+          className="w-full py-2 bg-sky-700 rounded text-white font-bold"
         >
           {loading ? "Creating..." : "Create Admin"}
         </button>
