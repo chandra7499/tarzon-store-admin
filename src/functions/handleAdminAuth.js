@@ -65,7 +65,7 @@ export const handleAdminAuth = async (e, dispatch, router) => {
 //Handle Logout State
 export const handleLogout = async (dispatch, router) => {
   try {
-    const logout = await axios.get("/api/auth/logout");
+    const logout = await axios.get(`${process.env.NEXT_BASE_URL}/api/auth/logout`);
     const status = logout.data;
     if (!status.success) {
       alert(status.message);
@@ -85,7 +85,7 @@ export const handleLogout = async (dispatch, router) => {
 
 export const handleForgetPassword = async (email) => {
   try {
-    const forgetPassword = await axios.post("/api/auth/forgetpassword", {
+    const forgetPassword = await axios.post(`${process.env.NEXT_BASE_URL}/api/auth/forgetpassword`, {
       email,
     });
     const status = forgetPassword.data;

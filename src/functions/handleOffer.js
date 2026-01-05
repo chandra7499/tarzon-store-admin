@@ -12,7 +12,7 @@ export async function handleOffers(){
                     console.log(data);
                     return data;
                 }
-                const orderData = await axios.get(`/api/offerZone`);
+                const orderData = await axios.get(`${process.env.NEXT_BASE_URL}/api/offerZone`);
                 const res = orderData.data;
         
                 if (!res.success) {
@@ -28,7 +28,7 @@ export async function handleOffers(){
 
 export async function PostHandleOfferZone(PostData){
   try {
-    const data = await axios.post("api/offerZone",PostData);
+    const data = await axios.post(`${process.env.NEXT_BASE_URL}api/offerZone`,PostData);
     const res =  data?.data;
     if(!res?.success){
        console.log(res.message);
