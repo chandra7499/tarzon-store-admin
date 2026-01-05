@@ -1,9 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { admin } from "@/lib/firebaseAdmin";
+import { getAdmin } from "@/lib/firebaseAdmin";
 import NodeCache from "node-cache";
 
+const admin = getAdmin();
 const cache = new NodeCache({ stdTTL: 5 }); // cache for 60s
 
 export async function GET() {

@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { admin } from "@/lib/firebaseAdmin";
+import { getAdmin } from "@/lib/firebaseAdmin";
+const admin = getAdmin();
 export async function PUT(request, { params }) {
   try {
     const { orderId } = await params;

@@ -2,9 +2,9 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { admin } from "@/lib/firebaseAdmin";
+import { getAdmin } from "@/lib/firebaseAdmin";
 import { cloudinaryUpload } from "../../../cloudUploads/cloudUpload";
-
+const admin = getAdmin();
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
