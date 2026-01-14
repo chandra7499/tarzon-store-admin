@@ -4,7 +4,7 @@ const cache = new NodeCache({ stdTTL: 60 });
 
 export async function handleOrders(type) {
   try {
-    const orderData = await axios.get(`${process.env.NEXT_BASE_URL}/api/orders?type=${type}`);
+    const orderData = await axios.get(`/api/orders?type=${type}`);
     const res = orderData.data;
 
     if (!res.success) {
@@ -28,7 +28,7 @@ export async function handleOrders(type) {
 
 export async function handleOrderStatusUpdate(orderId, status, userId,value) {
   try {
-    const { data } = await axios.put(`${process.env.NEXT_BASE_URL}/api/orders/status/${orderId}`, {
+    const { data } = await axios.put(`/api/orders/status/${orderId}`, {
       status,
       userId,
       value

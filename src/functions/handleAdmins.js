@@ -11,7 +11,7 @@ export async function handleAdmins(){
             console.log(data);
             return data;
         }
-        const adminData = await axios.get(`${process.env.NEXT_BASE_URL}/api/admins`);
+        const adminData = await axios.get(`/api/admins`);
         const res = adminData.data;
         if (!res.success) {
             return res;

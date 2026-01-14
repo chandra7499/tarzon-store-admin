@@ -11,7 +11,7 @@ export async function handleFeedBacks(){
             console.log(data);
             return data;
         }
-        const feedbackData = await axios.get(`${process.env.NEXT_BASE_URL}/api/feedbacks`);
+        const feedbackData = await axios.get(`/api/feedbacks`);
         const res = feedbackData.data;
         if (!res.success) {
             return res;
@@ -27,7 +27,7 @@ export async function handleFeedBacks(){
 
 export async function handleReplay(replayText,id,docId){
     try {
-        const res = await axios.put(`${process.env.NEXT_BASE_URL}/api/feedbacks/${id}`, {replayText,docId});
+        const res = await axios.put(`/api/feedbacks/${id}`, {replayText,docId});
         const result = await res.data;
         if (!result.success) {
             return result;

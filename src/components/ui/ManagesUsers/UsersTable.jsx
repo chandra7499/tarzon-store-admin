@@ -8,7 +8,7 @@ const UserTable = ({ users,role,fetching}) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[60px] text-white">s.No</TableHead>
+            <TableHead className="w-15  text-white">s.No</TableHead>
             <TableHead className="text-white">User</TableHead>
             <TableHead className="text-white">Email</TableHead>
             <TableHead className="text-white">Role</TableHead>

@@ -53,10 +53,19 @@ const SideBar = () => {
     return perm;
   };
 
-  const hasPermission = (requiredPermission) => {
-    if (!requiredPermission) return true;
+  const hasPermission = (requiredPermission, requiredRole) => {
     if (!admin) return false;
+
+    // 🔐 Role-level restriction
+    if (requiredRole && admin.role !== requiredRole) {
+      return false;
+    }
+
+    // Superadmin bypass (optional but recommended)
     if (admin.role === "superadmin") return true;
+
+    // No permission required
+    if (!requiredPermission) return true;
 
     const perms = admin.permissions?.map(normalizePermission) || [];
     return perms.includes(requiredPermission);
@@ -76,30 +85,42 @@ const SideBar = () => {
       path: "/products",
       icon: Package,
       permission: "view_products",
+      role: "superadmin",
     },
     {
       operation: "Updates",
       path: "/updates",
       icon: Pencil,
-      permission: "edit_products",
+      permission: "updates",
+      role: "superadmin",
+    },
+    {
+      operation: "feedbacks",
+      path: "/feedbacks",
+      icon: MessageSquareWarning,
+      permission: "manage_feedbacks",
+      role: "superadmin",
     },
     {
       operation: "Manage Orders",
       path: "/orders",
       icon: ShoppingCart,
       permission: "manage_orders",
+      role: "superadmin",
     },
     {
       operation: "Manage Users",
       path: "/users",
       icon: Users,
       permission: "manage_users",
+      role: "superadmin",
     },
     {
       operation: "Manage Admins",
       path: "/admins",
       icon: GraduationCap,
       permission: "manage_admins",
+      role: "superadmin",
     },
   ];
 
@@ -108,7 +129,7 @@ const SideBar = () => {
   useEffect(() => {
     async function fetchAdmin() {
       try {
-        const res = await fetch("/api/auth/me", {
+        const res = await fetch("/api/auth/check/me", {
           credentials: "include",
         });
 
@@ -157,9 +178,7 @@ const SideBar = () => {
         {open && (
           <div className="flex flex-col">
             <span className="font-semibold">{admin?.name || "Admin"}</span>
-            <span className="text-xs text-gray-500">
-              {admin?.role}
-            </span>
+            <span className="text-xs text-gray-500">{admin?.role}</span>
           </div>
         )}
       </SidebarHeader>
@@ -170,7 +189,7 @@ const SideBar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {items
-                .filter((item) => hasPermission(item.permission))
+                .filter((item) => hasPermission(item.permission, item.role))
                 .map((item) => {
                   const isActive =
                     item.path === "/"
@@ -202,13 +221,13 @@ const SideBar = () => {
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="border-t p-3">
+      <SidebarFooter className="border-t p-3 overflow-hidden">
         {!loading ? (
           <Button
             size="sm"
             onClick={handleLoginState}
             variant="ghost"
-            className="w-full justify-start text-red-500"
+            className="w-full justify-start cursor-pointer text-red-500"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Logout

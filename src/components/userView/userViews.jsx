@@ -8,12 +8,22 @@ import { handleUsers } from "@/functions/handleUsers";
 const UserPage = () => {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
+  const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
     // Mock data — you can replace this with your API call
     const dummyUsers = async () => {
-      const data = await handleUsers();
-      setUsers(data);
+      try {
+        setFetching(true);
+        const data = await handleUsers();
+        setUsers(data);
+         
+      }catch (error) {
+        console.log(error);
+      }finally{
+        setFetching(false);
+
+      }
       
     };
     dummyUsers();
@@ -40,7 +50,7 @@ const UserPage = () => {
             className="w-full md:w-1/3"
           />
 
-          <UserTable users={filteredUsers} role="user" />
+          <UserTable users={filteredUsers} role="user" fetching={fetching} />
         </CardContent>
       </Card>
     </div>

@@ -13,6 +13,7 @@ export default function OrderList({ searchTerm, status }) {
       try {
         setIsLoading(true);
         const orders = await handleOrders(status);
+        console.log(orders);
         setMockOrders(orders);
       } catch (error) {
         console.log(error);

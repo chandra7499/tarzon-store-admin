@@ -5,22 +5,27 @@ export function proxy(req) {
   const token = req.cookies.get("admin_token")?.value;
   const { pathname } = req.nextUrl;
 
-  // ✅ Allow Next.js internals & assets
+  // Always allow APIs
+  if (pathname.startsWith("/api")) {
+    return NextResponse.next();
+  }
+
+  // Allow Next.js internals
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/images") ||
-    pathname.startsWith("/favicon.ico") ||
+    pathname === "/favicon.ico" ||
     pathname.match(/\.(png|jpg|jpeg|svg|webp)$/)
   ) {
     return NextResponse.next();
   }
 
-  // ✅ Allow public routes
-  if (pathname === "/login" || pathname.startsWith("/api/auth")) {
+  // Allow public pages
+  if (pathname === "/login") {
     return NextResponse.next();
   }
 
-  // 🔒 Protect routes
+  // Protect everything else
   if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
@@ -30,7 +35,7 @@ export function proxy(req) {
 
 export const config = {
   matcher: [
-    "/:path*",
+    "/",
     "/orders/:path*",
     "/products/:path*",
     "/settings/:path*",

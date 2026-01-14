@@ -2,9 +2,11 @@
 import { NextResponse } from "next/server";
 import { getAdmin } from "@/lib/firebaseAdmin";
 
+export const runtime = "nodejs";
 export async function GET(req) {
   const token = req.cookies.get("admin_token")?.value;
   if (!token) {
+    console.log("No token");
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 

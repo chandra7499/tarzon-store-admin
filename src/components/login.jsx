@@ -72,7 +72,7 @@ const Login = () => {
     const email = e.target.email.value;
     try {
       setLoading(true);
-      const result = await handleForgetPassword(email);      
+      const result = await handleForgetPassword(email);
       setStatus(result.message);
     } catch (error) {
       console.log(error);
@@ -140,14 +140,14 @@ const Login = () => {
                     disabled={Loading}
                   />
                   {showPassword ? (
-                    <Eye
-                      onClick={() => showPasswordHandler()}
-                      className="cursor-pointer transistion-all duration-100 ease-in-out"
-                    />
-                  ) : (
                     <EyeClosed
                       onClick={() => showPasswordHandler()}
                       className="cursor-pointer  transistion-all duration-100 ease-in-out"
+                    />
+                  ) : (
+                    <Eye
+                      onClick={() => showPasswordHandler()}
+                      className="cursor-pointer transistion-all duration-100 ease-in-out"
                     />
                   )}
                 </div>

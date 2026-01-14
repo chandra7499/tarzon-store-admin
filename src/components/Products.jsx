@@ -9,14 +9,21 @@ const Products = () => {
 
   useEffect(() => {
     async function loadProducts() {
-      const result = await handleProducts();
+      try {
+        setIsLoading(true);
+        const result = await handleProducts();
 
-      if (result.error) {
-        setProducts([]);
-        return;
+        if (result.error) {
+          setProducts([]);
+          return;
+        }
+
+        setProducts(result.data);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsLoading(false);
       }
-
-      setProducts(result.data);
     }
 
     loadProducts();

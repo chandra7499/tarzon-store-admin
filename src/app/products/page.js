@@ -17,8 +17,8 @@ async function Productspage() {
       <SidebarProvider>
         {<SideBar />}
         {<SidebarTrigger className="cursor-pointer sticky top-1" />}
-        <section className="flex flex-col w-full h-full ">
-          <div className="flex   w-full gap-3 mb-5 justify-between items-center sticky top-0 p-5 border-b-1 border-b-gray-500/40 bg-slate-950 h-full">
+        <section className="flex flex-col w-full   h-screen">
+          <div className="flex   w-full gap-3  justify-between items-center sticky top-0 p-5 border-b border-b-gray-500/40 bg-slate-950">
             <h1 className="flex text-white font-semibold text-2xl antialiased tracking-wider">
               Products
             </h1>

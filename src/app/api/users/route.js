@@ -17,6 +17,7 @@ export async function GET() {
             Phone: user.Phone || user.phone || "",
             email: user.email || user.Email || "",
             avatar: user.profile || user.avatar || "",
+            status: user.status || "",
             role: user.role || "",
           }));
         
