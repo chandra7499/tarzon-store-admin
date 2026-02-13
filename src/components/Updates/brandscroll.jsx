@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 export default function BrandScroll() {
-  const [brands, setBrands] = useState([]);
+  const [brands, setBrands] = useState([])
 
   useEffect(() => {
     fetch("/api/brands")
       .then(res => res.json())
       .then(setBrands);
-  }, []);
+  }, [])
 
   return (
     <main className="flex-1 p-3 border rounded-xl items-center justify-center">
