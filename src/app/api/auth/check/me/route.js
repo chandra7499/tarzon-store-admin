@@ -1,6 +1,7 @@
-// app/api/auth/me/route.js
+// app/api/auth/check/me/route.js
 import { NextResponse } from "next/server";
 import { getAdmin } from "@/lib/firebaseAdmin";
+
 
 export const runtime = "nodejs";
 export async function GET(req) {
@@ -12,6 +13,7 @@ export async function GET(req) {
 
   try {
     const decoded = await getAdmin().auth().verifyIdToken(token);
+   
 
     const snapshot = await getAdmin()
       .firestore()
@@ -28,7 +30,9 @@ export async function GET(req) {
       authenticated: true,
       admin: snapshot.docs[0].data(),
     });
-  } catch {
+  } catch(err) {
+    console.log(err.message);
+    console.log("err.code:", err.code);
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 }

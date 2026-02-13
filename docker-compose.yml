@@ -1,12 +1,14 @@
-version: "3.9"
-
 services:
   admin:
     build: .
     image: tarzon_store_admin
-    container_name: tarzon-store-admin
     ports:
       - "3001:3000"
     env_file:
-      - ./.env
+      - ./.env.local
+    volumes:
+      - logs:/app/logs
     restart: unless-stopped
+
+volumes:
+  logs:

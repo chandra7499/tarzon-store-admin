@@ -120,7 +120,7 @@ const Login = () => {
           >
             <h1 className="text-2xl font-semibold mr-auto flex flex-col w-full justify-center items-center ml-auto mb-5">
               Welcome Back 👋🏻
-              <p className="text-red-500 text-sm font-light">{status}</p>
+              <p className="text-white/80 text-sm font-light">{status}</p>
             </h1>
             <div className="flex flex-col gap-5">
               <Input

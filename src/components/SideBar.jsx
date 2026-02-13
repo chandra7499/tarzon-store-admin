@@ -1,14 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import clsx from "clsx";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
-import Image from "next/image";
 
-import { handleLogout } from "@/functions/handleAdminAuth";
-import { setAdmin } from "@/Global_States/adminSlice";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 import {
   Sidebar,
@@ -23,9 +28,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import { Button } from "@/components/ui/button";
-import { Spinner } from "./ui/spinner";
-
 import {
   Home,
   Package,
@@ -34,21 +36,24 @@ import {
   ShoppingCart,
   Users,
   GraduationCap,
+  Search,
   LogOut,
 } from "lucide-react";
 
+import { handleLogout } from "@/functions/handleAdminAuth";
+import { setAdmin } from "@/Global_States/adminSlice";
+
 /* =========================
-   SIDEBAR COMPONENT
+   SIDEBAR
 ========================= */
 
 const SideBar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { open } = useSidebar();
   const dispatch = useDispatch();
+  const { open } = useSidebar();
 
   const [loading, setLoading] = useState(false);
-
   const admin = useSelector((state) => state.admin?.admin);
 
   /* =========================
@@ -61,23 +66,13 @@ const SideBar = () => {
     return perm;
   };
 
-  /**
-   * Rule:
-   * - superadmin → allow everything
-   * - others → permission-based
-   */
-  const canAccess = (requiredPermission) => {
+  const canAccess = (permission) => {
     if (!admin) return false;
-
-    // 🔓 Superadmin bypass
     if (admin.role === "superadmin") return true;
+    if (!permission) return true;
 
-    // 🌐 Public route (Dashboard)
-    if (!requiredPermission) return true;
-
-    const permissions = admin.permissions?.map(normalizePermission) || [];
-
-    return permissions.includes(requiredPermission);
+    const perms = admin.permissions?.map(normalizePermission) || [];
+    return perms.includes(permission);
   };
 
   /* =========================
@@ -85,24 +80,15 @@ const SideBar = () => {
   ========================= */
 
   const items = [
-    {
-      label: "Dashboard",
-      path: "/",
-      icon: Home,
-      permission: null,
-    },
+    { label: "Dashboard", path: "/dashboard", icon: Home },
     {
       label: "Products",
       path: "/products",
       icon: Package,
       permission: "view_products",
     },
-    {
-      label: "Updates",
-      path: "/Updates",
-      icon: Pencil,
-      permission: "updates",
-    },
+    { label: "Updates", path: "/Updates", icon: Pencil, permission: "updates" },
+    { label: "Search Engine", path: "/searchengineUpdation", icon: Search },
     {
       label: "Feedbacks",
       path: "/feedbacks",
@@ -134,29 +120,56 @@ const SideBar = () => {
   ========================= */
 
   useEffect(() => {
+    let mounted = true;
+
     async function fetchAdmin() {
       try {
         const res = await fetch("/api/auth/check/me", {
           credentials: "include",
         });
 
+        // 🔴 TOKEN INVALID / EXPIRED
+        if (res.status === 401) {
+          if (!mounted) return;
+
+          await handleLogout(dispatch, router);
+          return;
+        }
+
+        // 🔒 FORBIDDEN (not admin)
+        if (res.status === 403) {
+          if (!mounted) return;
+
+          await handleLogout(dispatch, router);
+          return;
+        }
+
         const data = await res.json();
 
-        if (data?.authenticated) {
+        if (data?.authenticated && mounted) {
           dispatch(
             setAdmin({
               admin: data.admin,
               isAuthenticated: true,
-            })
+            }),
           );
         }
       } catch (err) {
-        console.error("Fetch admin failed:", err);
+        console.error("Admin fetch failed:", err);
+
+        // 🚨 Network / unexpected error → safe logout
+        if (mounted) {
+          await handleLogout(dispatch, router);
+        }
       }
     }
 
     fetchAdmin();
-  }, [dispatch]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [dispatch, router]);
 
   /* =========================
      LOGOUT
@@ -176,25 +189,34 @@ const SideBar = () => {
   ========================= */
 
   return (
-    <Sidebar collapsible="icon" className="h-screen bg-white border-r">
+    <Sidebar collapsible="icon" className="h-screen bg-white border-r transition-all duration-200">
       {/* ===== HEADER ===== */}
-      <SidebarHeader className="flex items-center gap-3 p-4 border-b">
-        <div className="w-9 h-9 shrink-0">
+      <SidebarHeader className="flex  items-center gap-3 p-4 border-b overflow-hidden">
+        <div className={"w-12 h-12 shrink-0 flex items-center justify-center"}>
           <Image
             src={admin?.profile || "/vercel.svg"}
             width={36}
             height={36}
             alt="Admin"
-            className="w-9 h-9 rounded-full object-cover"
+            className="rounded-full object-cover w-10 h-10"
           />
         </div>
+        {/* {open && ( */}
+        <div
+          className={clsx(
+            "flex flex-col justify-center overflow-hidden transition-all duration-300 ease-in-out",
+            open
+              ? "opacity-100 max-w-40 ml-2"
+              : "opacity-0 max-w-0 ml-0 h-0 pointer-events-none",
+          )}
+        >
+          <span className="font-serif truncate">
+            {admin?.name || "Tarzon-store"}
+          </span>
+          <span className="text-xs text-gray-500 truncate">{admin?.role}</span>
+        </div>
 
-        {open && (
-          <div className="flex flex-col">
-            <span className="font-semibold">{admin?.name || "Admin"}</span>
-            <span className="text-xs text-gray-500">{admin?.role}</span>
-          </div>
-        )}
+        {/* )} */}
       </SidebarHeader>
 
       {/* ===== MENU ===== */}
@@ -212,20 +234,34 @@ const SideBar = () => {
 
                   return (
                     <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        asChild
-                        className={clsx(
-                          "flex items-center gap-3 px-3 py-2 rounded-md",
-                          isActive
-                            ? "bg-gray-900 text-white"
-                            : "hover:bg-gray-200"
+                      <Tooltip delayDuration={10} disableHoverableContent>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton
+                            asChild
+                            className={clsx(
+                              "flex items-center gap-3 px-3 py-2 rounded-md",
+                              isActive
+                                ? "bg-gray-900 text-white"
+                                : "hover:bg-gray-600 hover:text-white",
+                            )}
+                          >
+                            <Link href={item.path}>
+                              <item.icon className="w-4 h-4 shrink-0" />
+                              {open && <span>{item.label}</span>}
+                            </Link>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+
+                        {!open && (
+                          <TooltipContent
+                            side="right"
+                            className="text-white"
+                            sideOffset={8}
+                          >
+                            {item.label}
+                          </TooltipContent>
                         )}
-                      >
-                        <Link href={item.path}>
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
+                      </Tooltip>
                     </SidebarMenuItem>
                   );
                 })}
@@ -239,9 +275,9 @@ const SideBar = () => {
         {!loading ? (
           <Button
             size="sm"
-            onClick={onLogout}
             variant="ghost"
-            className="w-full justify-start text-red-500"
+            onClick={onLogout}
+            className="w-full overflow-hidden justify-start text-red-500"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Logout

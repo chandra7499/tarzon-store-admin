@@ -2,9 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { getAdmin } from "@/lib/firebaseAdmin";
-const admin = getAdmin();
 export async function PUT(request, { params }) {
   try {
+    const admin = getAdmin();
     const { orderId } = await params;
     const { status, userId, value } = await request.json();
     const docRef = await admin.firestore().collection("user").doc(userId).get();

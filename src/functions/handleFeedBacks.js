@@ -1,29 +1,22 @@
 import axios from "axios";
-import NodeCache from "node-cache";
-const cache = new NodeCache({ stdTTL: 60 });
+import { setFeedbacks } from "@/Global_States/feedbackSlice";
 
-export async function handleFeedBacks(){
-    try {
-        const cacheKey = "feedbacks";
-        const data = cache.get(cacheKey);
-        if (data) {
-            console.log("refetching cache data...");
-            console.log(data);
-            return data;
-        }
-        const feedbackData = await axios.get(`/api/feedbacks`);
-        const res = feedbackData.data;
-        if (!res.success) {
-            return res;
-        }
-        cache.set(cacheKey, res.data);
-        console.log(res.data);
-        return res.data;
-    } catch (error) {
-        console.log(error);
-        return error;
+export async function handleFeedBacks(dispatch) {
+  try {
+    const res = await axios.get("/api/feedbacks");
+
+    if (!res.data?.success || !Array.isArray(res.data.data)) {
+      throw new Error("Feedbacks not found");
     }
+
+    dispatch(setFeedbacks(res.data.data));
+    return { data: res.data.data, error: null };
+  } catch (error) {
+    console.error("Fetch feedbacks failed:", error);
+    return { data: [], error: error.message };
+  }
 }
+
 
 export async function handleReplay(replayText,id,docId){
     try {

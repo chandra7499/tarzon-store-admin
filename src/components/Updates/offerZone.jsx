@@ -1,170 +1,169 @@
 "use client";
+
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { motion } from "framer-motion";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { motion } from "framer-motion";
-import { handleOffers } from "../../functions/handleOffer";
-import { dateOut } from "@/functions/secondsToDate";
-import { PostHandleOfferZone } from "../../functions/handleOffer";
 import { Spinner } from "../ui/spinner";
 
-export default function OfferZoneForm({ initialData = {} }) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [dataLoading, setDataLoading] = useState(false);
-  const [DatabaseData, setdataBase] = useState([]);
-  const [matchingData, setMatchingData] = useState(false);
-  const [offer, setOffer] = useState({
-    offername: initialData.offername || "",
-    deliveryCharges: initialData.deliveryCharges || 0,
-    gst: initialData.gst || 0,
-    storeDiscount: initialData.storeDiscount || 0,
-    promoCode: Array.isArray(initialData.promoCode)
-      ? [initialData.promoCode] // convert your single promo array into nested form
-      : [],
-  });
+import { handleOffers, PostHandleOfferZone } from "@/functions/handleOffer";
+import { dateOut } from "@/functions/secondsToDate";
 
+const EMPTY_OFFER = {
+  offername: "",
+  deliveryCharges: 0,
+  gst: 0,
+  storeDiscount: 0,
+  promoCode: ["", 0, ""],
+};
+
+export default function OfferZoneForm() {
+  const dispatch = useDispatch();
+
+  /* =========================
+     GLOBAL STATE
+  ========================= */
+  const offers = useSelector((state) => state.offers.offers);
+
+  /* =========================
+     LOCAL STATE
+  ========================= */
+  const [offer, setOffer] = useState(EMPTY_OFFER);
+  const [isSaving, setIsSaving] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [matchingData, setMatchingData] = useState(false);
+
+  /* =========================
+     FETCH OFFERS
+  ========================= */
   useEffect(() => {
-    async function handleOffer() {
+    if (offers.length > 0) return;
+
+    async function loadOffers() {
       try {
         setDataLoading(true);
-        const offerData = await handleOffers();
-        setdataBase(offerData);
-        setOffer(...offerData);
-      } catch (error) {
-        console.log(error);
+        await handleOffers(dispatch);
+      } catch (err) {
+        console.error("Offer fetch failed:", err);
       } finally {
         setDataLoading(false);
       }
     }
-    handleOffer();
-  }, []);
 
+    loadOffers();
+  }, [dispatch, offers.length]);
+
+  /* =========================
+     INITIALIZE FORM FROM REDUX
+  ========================= */
   useEffect(() => {
-    if (!offer) {
-      return;
-    }
-    const offerData = DatabaseData?.find(
+    if (!offers.length) return;
+
+    const current = offers[0]; // ✅ FIRST OFFER
+
+    setOffer({
+      offername: current.offername || "",
+      deliveryCharges: current.deliveryCharges ?? 0,
+      gst: current.gst ?? 0,
+      storeDiscount: current.storeDiscount ?? 0,
+      promoCode: Array.isArray(current.promoCode)
+        ? [...current.promoCode]
+        : ["", 0, ""],
+    });
+  }, [offers]);
+
+  /* =========================
+     MATCH CHECK
+  ========================= */
+  useEffect(() => {
+    if (!offers.length) return;
+
+    const match = offers.find(
       (item) =>
         item.offername === offer.offername &&
-        item.deliveryCharges === Number(offer.deliveryCharges) &&
-        item.gst === Number(offer.gst) &&
-        item.storeDiscount === Number(offer.storeDiscount) &&
-        item.promoCode[0] === offer.promoCode[0] &&
-        item.promoCode[1] === Number(offer.promoCode[1]) &&
-        item.promoCode[2] === offer.promoCode[2]
+        Number(item.deliveryCharges) === Number(offer.deliveryCharges) &&
+        Number(item.gst) === Number(offer.gst) &&
+        Number(item.storeDiscount) === Number(offer.storeDiscount) &&
+        item.promoCode?.[0] === offer.promoCode?.[0] &&
+        Number(item.promoCode?.[1]) === Number(offer.promoCode?.[1]) &&
+        item.promoCode?.[2] === offer.promoCode?.[2]
     );
 
-    setMatchingData(offerData ? true : false);
-  }, [offer]);
+    setMatchingData(Boolean(match));
+  }, [offer, offers]);
 
+  /* =========================
+     HANDLERS
+  ========================= */
   const handleChange = (field, value) => {
-    setOffer({ ...offer, [field]: value });
+    setOffer((prev) => ({ ...prev, [field]: value }));
   };
 
   const handlePromoChange = (index, value) => {
-    const updated = [...offer.promoCode];
-
-    if (index === 0) updated[index] = value;
-    if (index === 1) updated[index] = Number(value);
-    if (index === 2) updated[index] = value;
-
-    setOffer({ ...offer, promoCode: updated });
+    setOffer((prev) => {
+      const updated = [...prev.promoCode];
+      updated[index] = index === 1 ? Number(value) : value;
+      return { ...prev, promoCode: updated };
+    });
   };
 
-  console.log(offer);
-
   const handleSave = async () => {
-    // Convert back to Firestore structure:
     try {
-      const dataToSave = {
-        offername: offer.offername,
+      setIsSaving(true);
+
+      await PostHandleOfferZone({
+        ...offer,
         deliveryCharges: Number(offer.deliveryCharges),
         gst: Number(offer.gst),
         storeDiscount: Number(offer.storeDiscount),
-        promoCode: offer.promoCode || [], // single promo as array
-      };
-      console.log("Saving Offer:", dataToSave);
-      setIsLoading(true);
-      await PostHandleOfferZone(dataToSave);
-      console.log("successful");
+      });
+
+      await handleOffers(dispatch);
     } catch (err) {
-      console.log(err);
+      console.error("Save offer failed:", err);
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  
-
+  /* =========================
+     UI
+  ========================= */
   return (
-    <motion.div
-      className="w-full mx-auto p-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <Card className="shadow-md border border-gray-200">
+    <motion.div className="w-full mx-auto p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">
-            🛍️ Offer Zone Settings {dataLoading && <span className="text-xl ml-3 text-gray-500">Fetching...</span>}
+          <CardTitle>
+            🛍️ Offer Zone Settings
+            {dataLoading && <span className="ml-3 text-sm text-gray-500">Fetching...</span>}
           </CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              placeholder="Offer Name"
-              value={offer?.offername}
-              onChange={(e) => handleChange("offername", e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Delivery Charges"
-              value={offer?.deliveryCharges === 0 ? "" : offer.deliveryCharges}
-              onChange={(e) =>
-                handleChange("deliveryCharges", Number(e.target.value))
-              }
-            />
-            <Input
-              type="number"
-              placeholder="GST (%)"
-              value={offer?.gst === 0 ? "" : offer.gst}
-              onChange={(e) => handleChange("gst", Number(e.target.value))}
-            />
-            <Input
-              type="number"
-              placeholder="Store Discount (%)"
-              defaultValue={
-                offer?.storeDiscount === 0 ? "" : offer?.storeDiscount
-              }
-              onChange={(e) =>
-                handleChange("storeDiscount", Number(e.target.value))
-              }
-            />
+            <Input value={offer.offername} onChange={(e) => handleChange("offername", e.target.value)} />
+            <Input type="number" value={offer.deliveryCharges || ""} onChange={(e) => handleChange("deliveryCharges", e.target.value)} />
+            <Input type="number" value={offer.gst || ""} onChange={(e) => handleChange("gst", e.target.value)} />
+            <Input type="number" value={offer.storeDiscount || ""} onChange={(e) => handleChange("storeDiscount", e.target.value)} />
           </div>
 
-          <div className="border rounded-lg p-4 space-y-3">
-            <h4 className="font-medium">🎟️ PromoCodes</h4>
-            <div className="grid grid-cols-3 gap-2 items-center border p-3 rounded-lg">
-              {offer?.promoCode?.map((promo, i) => (
-                <Input
-                  key={i}
-                  type={i === 0 ? "text" : i === 1 ? "number" : "date"}
-                  placeholder="Promo Code"
-                  defaultValue={i === 2 ? dateOut(promo) : promo}
-                  onChange={(e) => handlePromoChange(i, e.target.value)}
-                />
-              ))}
-            </div>
+          <div className="grid grid-cols-3 gap-2">
+            {offer.promoCode.map((p, i) => (
+              <Input
+                key={i}
+                type={i === 1 ? "number" : i === 2 ? "date" : "text"}
+                className={`${i===2 && "bg-gray-500"}`}
+                value={i === 2 ? dateOut(p) : p}
+                onChange={(e) => handlePromoChange(i, e.target.value)}
+              />
+            ))}
           </div>
 
-          <Button
-            disabled={isLoading || matchingData || dataLoading}
-            onClick={handleSave}
-            className="bg-indigo-600 hover:bg-indigo-700 w-full flex text-white"
-          >
-            <Spinner show={isLoading} />
-            update
+          <Button variant={"outline"} disabled={isSaving || matchingData || dataLoading} onClick={handleSave}>
+            <Spinner show={isSaving} /> Update Offer
           </Button>
         </CardContent>
       </Card>

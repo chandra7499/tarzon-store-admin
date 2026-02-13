@@ -4,9 +4,9 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAdmin } from "@/lib/firebaseAdmin";
 import { cloudinaryUpload } from "../../../cloudUploads/cloudUpload";
-const admin = getAdmin();
 export async function GET(request, { params }) {
   try {
+    const admin = getAdmin();
     const { id } = await params;
     const docRef = await admin.firestore().collection("products").doc(id).get();
     const data = docRef.data();
@@ -18,7 +18,8 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    const { id } = await  params;
+    const admin = getAdmin();
+    const { id } = await params;
     const data = await request.json();
 
     if (!data) {
@@ -40,9 +41,9 @@ export async function PUT(request, { params }) {
         return await cloudinaryUpload(
           image,
           "Products",
-          `${data.name}_${index}_${id}`
+          `${data.name}_${index}_${id}`,
         );
-      })
+      }),
     );
 
     // ✅ Upload feature images
@@ -59,12 +60,12 @@ export async function PUT(request, { params }) {
             return await cloudinaryUpload(
               img,
               "Features",
-              `${data.name}_feature_${featureIndex}_${i}_${id}`
+              `${data.name}_feature_${featureIndex}_${i}_${id}`,
             );
-          })
+          }),
         );
         return { ...feature, images: featureImages };
-      })
+      }),
     );
 
     // ✅ Handle brand banner safely
@@ -78,13 +79,15 @@ export async function PUT(request, { params }) {
       bannerUrl = await cloudinaryUpload(
         data.brand.Banner,
         "Banners",
-        `${data.name}_banner_${id}`
+        `${data.name}_banner_${id}`,
       );
     } else {
       bannerUrl = ""; // fallback
     }
 
-    const brandSnap = admin.firestore().doc(`Brands/${(data.brand.brandName).toLowerCase()}`);
+    const brandSnap = admin
+      .firestore()
+      .doc(`Brands/${data.brand.brandName.toLowerCase()}`);
     const brandRef = await brandSnap.get();
     // ✅ Clean and prepare final data
     const updatedData = {
@@ -94,7 +97,7 @@ export async function PUT(request, { params }) {
       brand: {
         ...data.brand,
         Banner: bannerUrl,
-        logo:brandRef.ref
+        logo: brandRef.ref,
       },
     };
 

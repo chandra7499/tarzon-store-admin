@@ -1,29 +1,25 @@
 import axios from "axios";
-import NodeCache from "node-cache";
-const cache = new NodeCache({ stdTTL: 60 });
+import { setOffers } from "@/Global_States/offerSlice";
 
-export async function handleOffers(){
-    try {
-        const cacheKey = "offerZone";
-                const data = cache.get(cacheKey);
-        
-                if (data) {
-                    console.log("refetching cache data...");
-                    console.log(data);
-                    return data;
-                }
-                const orderData = await axios.get(`/api/offerZone`);
-                const res = orderData.data;
-        
-                if (!res.success) {
-                    return res;
-                }
-                cache.set(cacheKey, res.offerDocs);
-                console.log(res.offerDocs);
-                return res.offerDocs;
-    } catch (error) {
-        return error;
+/**
+ * Fetch offers and store them in Redux (global cache)
+ */
+export async function handleOffers(dispatch) {
+  try {
+    const res = await axios.get("/api/offerZone");
+
+    if (!res.data?.success || !Array.isArray(res.data.offerDocs)) {
+      throw new Error("Offer data not found");
     }
+
+    // ✅ Store in Redux (global)
+    dispatch(setOffers(res.data.offerDocs));
+
+    return { data: res.data.offerDocs, error: null };
+  } catch (error) {
+    console.error("Fetch offers failed:", error);
+    return { data: [], error: error.message };
+  }
 }
 
 export async function PostHandleOfferZone(PostData){

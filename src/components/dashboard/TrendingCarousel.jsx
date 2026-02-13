@@ -17,39 +17,63 @@ import { Skeleton } from "../ui/skeleton";
 import { Button } from "../ui/button";
 import { Trash2, Pencil } from "lucide-react";
 import { PopUpSheet } from "../ui/popUps";
+import { useDispatch, useSelector } from "react-redux";
+import { EditTrendingSheet } from "./EditTrendingSpecific";
+import { handleDeleteTrendingBanner } from "@/functions/handleTrendingBanner";
+import { extractPublicId } from "@/functions/externalFn";
+import { Spinner } from "../ui/spinner";
 
 const TrendingCarousel = () => {
-  const [trending, setTrending] = useState([]);
+  const dispatch = useDispatch();
+
+  // ✅ GLOBAL STATE
+  const trending = useSelector((state) => state.trending.trending);
+
   const [loading, setLoading] = useState(false);
   const [ImageLoading, setImageLoading] = useState(true);
+  const [openEditSheet, setOpenEditSheet] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
-    async function getTrending() {
-      setLoading(true);
+    async function loadTrending() {
+      try {
+        // ✅ Same logic as Products
+        if (trending.length > 0) return;
 
-      const result = await handleTrendingBanner();
-
-      if (!result || result.error) {
-        setTrending([]);
+        setLoading(true);
+        await handleTrendingBanner(dispatch);
+      } catch (err) {
+        console.error("Trending load failed:", err);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      setTrending(
-        Array.isArray(result.data)
-          ? result.data.flatMap((doc) => doc?.items || [])
-          : []
-      );
-
-      setLoading(false);
     }
 
-    getTrending();
-  }, []);
+    loadTrending();
+  }, [dispatch, trending.length]);
 
-  useEffect(() => {
-    console.log(trending);
-  }, [trending]);
+  //Function for Editing
+
+  function handleEdit(item) {
+    setOpenEditSheet(true);
+    setEditItem(item);
+  }
+
+  //function for deleting products
+
+  async function handleDelete(item) {
+    try {
+      const publicId = extractPublicId(item.image);
+      setDeleteLoading(true);
+      await handleDeleteTrendingBanner(item.id, publicId);
+      alert("Banner deleted successfully please reload the page");
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
 
   return (
     <div className="p-6  bg-white/15  relative flex backdrop-blur-3xl justify-center   rounded-2xl shadow-lg">
@@ -67,14 +91,32 @@ const TrendingCarousel = () => {
           }
         >
           {trending?.map((item, index) => (
-            <Image
-              src={item.image}
-              key={index}
-              className="aspect-[2/1] rounded-lg "
-              alt="alt"
-              width={1500}
-              height={1500}
-            />
+            <div key={index} className="flex gap-2 group relative">
+              <Image
+                src={item.image}
+                className="aspect-[2/1] shrink rounded-lg"
+                alt="alt"
+                width={1200}
+                height={1200}
+              />
+
+              <Button
+                variant="outline"
+                onClick={() => handleEdit(item)}
+                className="
+                    rounded-md
+                    opacity-0
+                    group-hover:opacity-100
+                    transition-opacity
+                    duration-200
+                    absolute
+                    right-0
+                    p-0
+      "
+              >
+                <Pencil />
+              </Button>
+            </div>
           ))}
         </PopUpSheet>
         {/**Popups delete carosel */}
@@ -90,19 +132,41 @@ const TrendingCarousel = () => {
           }
         >
           {trending?.map((item, index) => (
-            <Image
-              src={item.image}
-              key={index}
-              className="aspect-[2/1] rounded-lg"
-              alt="alt"
-              width={1500}
-              height={1500}
-            />
+            <div key={index} className="flex gap-2 group relative">
+              <Image
+                src={item.image}
+                className="aspect-[2/1] rounded-lg"
+                alt="alt"
+                width={1200}
+                height={1200}
+              />
+
+              <Button
+                variant="secondary"
+                onClick={() => handleDelete(item)}
+                className="
+                    rounded-md
+                    opacity-0
+                    group-hover:opacity-100
+                    transition-opacity
+                    duration-200
+                    absolute
+                    right-0
+                    p-0
+      "
+              >
+                {deleteLoading ? (
+                  <Spinner className="animate-spin text-slate-950" />
+                ) : (
+                  <Trash2 />
+                )}
+              </Button>
+            </div>
           ))}
         </PopUpSheet>
       </div>
 
-      <div className="space-y-8 flex-1 max-w-[1400px] ">
+      <div className="space-y-8  flex-1 max-w-[1200px] ">
         {/* Header */}
         <div className="flex-1 items-center justify-between px-2 md:px-6">
           <h2 className="md:text-3xl flex font-bold tracking-tight text-white">
@@ -129,40 +193,34 @@ const TrendingCarousel = () => {
             loop: true,
             align: "center",
           }}
-          className="max-w-[1400px] h-[33rem] justify-center  flex "
+          className="w-full max-w-full overflow-hidden"
         >
-          <CarouselContent>
+          <CarouselContent className="w-full">
             {trending?.map((item, index) => (
-              <CarouselItem key={item.id} className="basis-full">
+              <CarouselItem key={item.id} className="w-full">
                 {ImageLoading && (
-                  <Skeleton className="w-full h-[33rem] rounded-3xl bg-white/25 z-[99999]" />
+                  <Skeleton className="w-full aspect-[2/1] rounded-3xl bg-white/25" />
                 )}
 
-                <motion.div
-                  whileHover={{ scale: 1.0 }}
-                  className={"flex w-full h-[36rem] justify-center "}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <Card className="group  border-none shadow-2xl min-w-[12rem]  max-h-[33rem]  max-w-[1200px]  w-full overflow-hidden rounded-3xl bg-black p-0">
-                    <CardContent className="p-0 relative max-w-[1200px]  max-h-[33rem]">
+                <motion.div className="flex w-full justify-center">
+                  <Card className="w-full max-w-[1200px] overflow-hidden rounded-3xl bg-black p-0">
+                    <CardContent className="p-0 relative aspect-[2/1]">
                       <Image
                         src={item.image}
                         alt={item.link}
-                        width={1300}
-                        height={900}
+                        fill
                         onLoad={() => setImageLoading(false)}
-                        loading="eager"
                         priority
-                        className="object-fill object-center    w-full  h-[34rem] rounded-3xl brightness-90 group-hover:brightness-100 transition-all duration-500"
+                        className="object-cover rounded-3xl brightness-90 group-hover:brightness-100 transition-all duration-500"
                       />
-                      {/* Overlay gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                      {/* Title */}
-                      <div className="absolute bottom-8 left-8 text-white">
-                        <h3 className="text-xl md:text-3xl font-semibold drop-shadow-lg">
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+                      <div className="absolute bottom-6 left-6 text-white">
+                        <h3 className="text-xl md:text-3xl font-semibold">
                           {item.link}
                         </h3>
-                        <p className="text-sm text-gray-300 mt-1">
+                        <p className="text-sm text-gray-300">
                           Top Pick #{index + 1}
                         </p>
                       </div>
@@ -173,11 +231,33 @@ const TrendingCarousel = () => {
             ))}
           </CarouselContent>
 
-          {/* Navigation buttons */}
-          <CarouselPrevious className="md:flex hidden absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 backdrop-blur-sm" />
-          <CarouselNext className="hidden md:flex  absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 backdrop-blur-sm" />
+          <CarouselPrevious
+            className="
+                absolute left-4 top-1/2 -translate-y-1/2
+                bg-black/60 hover:bg-black/80
+                text-white rounded-full
+                w-10 h-10
+                backdrop-blur-sm
+                z-10
+  "
+          />
+          <CarouselNext
+            className="
+                absolute right-5 top-1/2 -translate-y-1/2
+                bg-black/60 hover:bg-black/80
+                text-white rounded-full
+                w-10 h-10
+                backdrop-blur-sm
+                z-10
+  "
+          />
         </Carousel>
       </div>
+      <EditTrendingSheet
+        open={openEditSheet}
+        setOpen={setOpenEditSheet}
+        item={editItem}
+      />
     </div>
   );
 };

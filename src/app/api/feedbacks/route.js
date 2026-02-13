@@ -2,10 +2,10 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { getAdmin } from "@/lib/firebaseAdmin";
-const admin = getAdmin();
 
 export async function GET() {
   try {
+    const admin = getAdmin();
     const snapshot = await admin.firestore().collection("userFeedBacks").get();
 
     if (snapshot.empty) {
@@ -29,27 +29,27 @@ export async function GET() {
               response: feedback.response,
               timestamp: new Date(
                 feedback.timestamp.seconds * 1000 +
-                  feedback.timestamp.nanoseconds / 1000000
+                  feedback.timestamp.nanoseconds / 1000000,
               )
                 .toISOString()
                 .slice(0, 10),
               userName: userData?.Name || userData?.name || "Unknown", // Add resolved name as new field
             };
-          })
+          }),
         );
 
         return {
           id: doc.id,
           feedBacks: processedFeedBacks,
         };
-      })
+      }),
     );
 
     return NextResponse.json({ success: true, data }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

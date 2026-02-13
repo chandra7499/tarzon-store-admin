@@ -1,32 +1,23 @@
 import axios from "axios";
-import NodeCache from "node-cache";
-const cache = new NodeCache({ stdTTL: 60 });
+import { setProducts } from "@/Global_States/productsSlice";
 
-export async function handleProducts() {
+export async function handleProducts(dispatch) {
   try {
-    const cacheKey = "products";
-    const cached = cache.get(cacheKey);
-
-    if (Array.isArray(cached)) {
-      console.log("using cached products");
-      return { data: cached, error: null };
-    }
-
     const res = await axios.get("/api/products");
 
-    if (!res.data?.success || !Array.isArray(res.data.data)) {
-      return { data: [], error: "Products not found" };
+    if (!res.data?.success || !Array.isArray(res.data.data)) 
+    {
+      throw new Error("Products not found");
     }
 
-    cache.set(cacheKey, res.data.data);
-    return { data: res.data.data, error: null };
+    dispatch(setProducts(res.data.data));
 
+    return { data: res.data.data, error: null };
   } catch (error) {
-    console.error(error);
+    console.error("Fetch products failed:", error);
     return { data: [], error: error.message };
   }
 }
-
 
 export async function handleAddProduct(data) {
   try {
@@ -38,10 +29,9 @@ export async function handleAddProduct(data) {
     }
     return result.message;
   } catch (error) {
-    return  error.error;
+    return error.error;
   }
 }
-
 
 export async function handleEditProductData(id) {
   try {
@@ -53,16 +43,15 @@ export async function handleEditProductData(id) {
     }
     return result.data;
   } catch (error) {
-    return  error.error;
+    return error.error;
   }
 }
 
-
 //update products  data
-export async function handleUpdateProductData(id,data){
+export async function handleUpdateProductData(id, data) {
   try {
     console.log(data);
-    const res = await axios.put(`/api/products/edit/${id}`,data);
+    const res = await axios.put(`/api/products/edit/${id}`, data);
     const result = res.data;
     if (!result.success) {
       console.log(result.message);
@@ -70,6 +59,6 @@ export async function handleUpdateProductData(id,data){
     }
     return result.message;
   } catch (error) {
-    return  error;
+    return error;
   }
 }

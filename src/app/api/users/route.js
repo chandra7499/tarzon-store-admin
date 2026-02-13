@@ -3,9 +3,9 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { getAdmin } from "@/lib/firebaseAdmin";
-const admin = getAdmin();
 export async function GET() {
     try {
+        const admin = getAdmin();
         const usersData = await admin.firestore().collection("user").get();
         const data = usersData.docs.map((doc) => ({
             id: doc.id,

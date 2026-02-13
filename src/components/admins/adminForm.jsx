@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "@/lib/firebaseConfig";
+import { getFirebaseClient } from "@/lib/firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
 /* ---------------- PERMISSIONS ---------------- */
@@ -98,46 +98,42 @@ const CreateAdminPage = () => {
   /* ---------- SUBMIT ---------- */
 
   const handleSubmit = async () => {
-    if (!form.fullName || !form.email || !form.password)
-      return alert("All required fields missing");
+  if (!form.fullName || !form.email || !form.password)
+    return alert("All required fields missing");
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const res = await createUserWithEmailAndPassword(
-        auth,
-        form.email,
-        form.password
-      );
+    const firebase = getFirebaseClient();
+    if (!firebase) return;
 
-      const adminId = res.user.uid;
-      const { password, ...safeForm } = form; // ❌ never store password
+    const { auth, db } = firebase;
 
-      await setDoc(doc(db, "admins", adminId), {
-        ...safeForm,
-        status: "active",
-        createdAt: serverTimestamp(),
-        lastLogin: null,
-      });
+    const res = await createUserWithEmailAndPassword(
+      auth,
+      form.email,
+      form.password
+    );
 
-      alert("Admin created successfully!");
+    const adminId = res.user.uid;
+    const { password, ...safeForm } = form;
 
-      setForm({
-        fullName: "",
-        email: "",
-        password: "",
-        role: "admin",
-        profile: "",
-        permissions: ROLE_PERMISSIONS.admin,
-      });
-      setPreviewImage(null);
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    await setDoc(doc(db, "admins", adminId), {
+      ...safeForm,
+      status: "active",
+      createdAt: serverTimestamp(),
+      lastLogin: null,
+    });
+
+    alert("Admin created successfully!");
+    // reset form...
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   /* ---------- UI ---------- */
 

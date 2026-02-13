@@ -42,6 +42,12 @@ ENV EMAIL_PASS=${EMAIL_PASS}
 # We NEED devDependencies (tailwind, postcss)
 
 COPY package*.json ./
+
+RUN npm config set fetch-retry-maxtimeout 600000 \
+ && npm config set fetch-retry-mintimeout 20000 \
+ && npm config set registry https://registry.npmmirror.com \
+ && npm ci --legacy-peer-deps
+
 RUN npm install
 
 COPY . .

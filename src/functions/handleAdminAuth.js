@@ -3,7 +3,7 @@
 import { clearAdmin, setAdmin } from "@/Global_States/adminSlice";
 import axios from "axios";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebaseConfig";
+import { getFirebaseClient } from "@/lib/firebaseConfig";
 
 // 🔐 Admin Login
 export const handleAdminAuth = async (e, dispatch, router) => {
@@ -15,7 +15,7 @@ export const handleAdminAuth = async (e, dispatch, router) => {
   try {
     // 1️⃣ Firebase login
     const userCredential = await signInWithEmailAndPassword(
-      auth,
+      getFirebaseClient().auth,
       email,
       password
     );
@@ -71,7 +71,7 @@ export const handleLogout = async (dispatch, router) => {
       alert(status.message);
       return;
     }
-    await signOut(auth);
+    await signOut(getFirebaseClient().auth);
     dispatch(clearAdmin());
     router.replace("/login");
     console.log(status.message);

@@ -1,6 +1,13 @@
 "use client";
 import { Card, CardContent } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 const data = [
   { month: "Jan", users: 400 },
@@ -19,7 +26,15 @@ const MonthlyNewUsers = () => (
         <BarChart data={data}>
           <XAxis dataKey="month" />
           <YAxis />
-          <Tooltip />
+          <Tooltip
+            cursor={{ fill: "transparent" }}
+            contentStyle={{
+              backgroundColor: "#0f172a",
+              border: "1px solid #334155",
+              borderRadius: "8px",
+              color: "#e5e7eb",
+            }}
+          />
           <Bar dataKey="users" fill="#22c55e" radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>

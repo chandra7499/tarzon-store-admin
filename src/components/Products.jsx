@@ -1,33 +1,35 @@
 "use client";
-import Card from "./Card";
-import { useState, useEffect } from "react";
-import { handleProducts } from "@/functions/handleProducts";
-const Products = () => {
-  const [isLoading, setIsLoading] = useState(false);
 
-  const [products, setProducts] = useState([]);
+import Card from "./Card";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { handleProducts } from "@/functions/handleProducts";
+
+const Products = () => {
+  const dispatch = useDispatch();
+
+  // ✅ read products from Redux
+  const products = useSelector((state) => state.products.products);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadProducts() {
       try {
+        // ✅ If already in Redux, don’t refetch
+        if (products.length > 0) return;
+
         setIsLoading(true);
-        const result = await handleProducts();
-
-        if (result.error) {
-          setProducts([]);
-          return;
-        }
-
-        setProducts(result.data);
+        await handleProducts(dispatch);
       } catch (error) {
-        console.log(error);
+        console.error("Load products failed:", error);
       } finally {
         setIsLoading(false);
       }
     }
 
     loadProducts();
-  }, []);
+  }, [dispatch, products.length]);
 
   if (isLoading) {
     return (
@@ -38,22 +40,24 @@ const Products = () => {
   }
 
   return (
-    <>
-      <section className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] justify-items-center gap-5 ">
-        {products?.map((item, index) => {
-          const image = Array.isArray(item.image) ? item.image : [item.image];
-          return (
-            <Card
-              key={index}
-              id={item.id}
-              Title={item.title}
-              image={image[0] || item.images[0]}
-              details={item.price}
-            />
-          );
-        })}
-      </section>
-    </>
+    <section className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] justify-items-center gap-5">
+      {products.map((item) => {
+        const image =
+          Array.isArray(item.images) && item.images.length > 0
+            ? item.images[0]
+            : item.image;
+
+        return (
+          <Card
+            key={item.id}
+            id={item.id}
+            Title={item.name || item.title}
+            image={image}
+            details={item.price}
+          />
+        );
+      })}
+    </section>
   );
 };
 

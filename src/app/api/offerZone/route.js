@@ -4,6 +4,9 @@ import { getAdmin } from "@/lib/firebaseAdmin";
 export async function GET() {
   try {
     const admin = getAdmin();
+    if (!admin) {
+      throw new Error("Firebase Admin not initialized");
+    }
     const snapshot = await admin.firestore().collection("offerZone").get();
 
     if (snapshot.empty) {

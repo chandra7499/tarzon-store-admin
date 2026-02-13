@@ -60,7 +60,7 @@ export default function OrderCard({ order, setUpdatedStatus, isLoading }) {
     <Card className="bg-white/70 backdrop-blur-xl shadow-lg border rounded-2xl max-h-[500px]">
       {/* Header */}
       <CardHeader className="flex items-center justify-between flex-col gap-5">
-        <div className="flex items-center gap-3 w-full">
+        <div className="flex  items-center gap-3 w-full">
           <Image
             src={
               order?.avatar ||
@@ -69,7 +69,7 @@ export default function OrderCard({ order, setUpdatedStatus, isLoading }) {
             alt={order?.name}
             width={40}
             height={40}
-            className="rounded-full"
+            className="rounded-full w-15 h-15 object-cover"
           />
           <div>
             <p className="font-semibold text-gray-800">{order?.name}</p>
@@ -132,7 +132,7 @@ export default function OrderCard({ order, setUpdatedStatus, isLoading }) {
                       Qty: {p.quantity || p.qty}
                     </p>
                     <p className="text-xs text-gray-800 font-semibold">
-                      ₹{p.price.toFixed(2)}
+                      ₹{p.price.toLocaleString("en-IN")}
                     </p>
                   </div>
                 ))}
@@ -150,7 +150,7 @@ export default function OrderCard({ order, setUpdatedStatus, isLoading }) {
                           Number(item.quantity || item.qty || 1),
                       0
                     )
-                    .toFixed(2)}
+                    .toLocaleString("en-IN")}
                 </p>
 
                 {/* Show Select only if pending */}
@@ -189,7 +189,7 @@ export default function OrderCard({ order, setUpdatedStatus, isLoading }) {
       {/* Grand Total */}
       <div className="flex justify-end px-5 py-2">
         <p className="text-lg font-semibold text-gray-800">
-          Total: ₹{totalPrice.toFixed(2)}
+          Total: ₹{totalPrice.toLocaleString("en-IN")}
         </p>
       </div>
     </Card>

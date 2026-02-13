@@ -6,9 +6,9 @@ import { getAdmin } from "@/lib/firebaseAdmin";
 import axios from "axios";
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
-const admin = getAdmin();
 export async function GET(request) {
   try {
+    const admin = getAdmin();
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type"); // pending | delivered | cancel
 

@@ -1,132 +1,147 @@
 "use client";
+
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { Send, MessageCircle, Mail, User, Calendar } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { handleFeedBacks } from "@/functions/handleFeedBacks";
-import { handleReplay } from "@/functions/handleFeedBacks";
 import { Spinner } from "../ui/spinner";
 
+import { handleFeedBacks, handleReplay } from "@/functions/handleFeedBacks";
+import { updateFeedbackReply } from "@/Global_States/feedbackSlice";
+
 const FeedBackView = () => {
-  const [feedbacks, setFeedbacks] = useState([]);
+  const dispatch = useDispatch();
+
+  /* =========================
+     GLOBAL STATE
+  ========================= */
+  const feedbacks = useSelector((state) => state.feedbacks.feedbacks);
+
+  /* =========================
+     LOCAL UI STATE
+  ========================= */
   const [activeReply, setActiveReply] = useState(null);
   const [replyText, setReplyText] = useState("");
-  const [dataFeteching, setDataFetching] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
-  const handleReply = async (id, docId) => {
-    try {
-      console.log(replyText, id, docId);
-      setFeedbacks((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, response: replyText } : item
-        )
-      );
-      setIsLoading(true);
-      const data = await handleReplay(replyText, id, docId);
-      console.log(data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  /* =========================
+     FETCH FEEDBACKS
+  ========================= */
   useEffect(() => {
-    async function fetchFeedbacks() {
+    async function loadFeedbacks() {
       try {
-        setDataFetching(true);
-        const res = await handleFeedBacks();
-        console.log(res);
-        setFeedbacks(res);
-      } catch (error) {
-        console.log(error);
+        if (feedbacks.length > 0) return;
+
+        setIsFetching(true);
+        await handleFeedBacks(dispatch);
+      } catch (err) {
+        console.error("Feedback fetch failed:", err);
       } finally {
-        setDataFetching(false);
+        setIsFetching(false);
       }
     }
 
-    fetchFeedbacks();
-    console.log(feedbacks);
-  }, []);
+    loadFeedbacks();
+  }, [dispatch, feedbacks.length]);
 
+  /* =========================
+     REPLY HANDLER
+  ========================= */
+  const handleReply = async (feedbackId, parentId) => {
+    if(feedbacks.length === 3){
+      return;
+      
+    }
+    try {
+      setIsSending(true);
+      await handleReplay(replyText, feedbackId, parentId);
+      setReplyText("");
+      setActiveReply(null);
+    } catch (error) {
+      console.error("Reply failed:", error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  /* =========================
+     UI
+  ========================= */
   return (
-    <section className="min-h-screen w-full bg-gradient-to-b  from-slate-950 to-slate-700 rounded-lg p-6 text-slate-100">
+    <section className="min-h-screen w-full bg-gradient-to-b from-slate-950 to-slate-700 rounded-lg p-6 text-slate-100">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-semibold mb-6 text-center text-white tracking-wide">
+        <h1 className="text-3xl font-semibold mb-6 text-center">
           User Feedback Management
         </h1>
 
-        {dataFeteching && (
-          <h1 className="flex w-full text-xl text-gray-500 justify-center">
-            Fetching...
-          </h1>
+        {isFetching && (
+          <p className="text-center text-gray-400">Fetching...</p>
         )}
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {feedbacks?.map((items) =>
-            items?.feedBacks?.map((item) => (
+          {feedbacks.map((group) =>
+            group.feedBacks.map((item) => (
               <motion.div
-                key={items.id}
+                key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="bg-slate-700/60 backdrop-blur-md overflow-x-hidden rounded-2xl shadow-md hover:shadow-lg transition-all p-4 flex flex-col justify-between border border-slate-600"
+                className="bg-slate-700/60 rounded-2xl p-4 border border-slate-600 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center gap-2 text-sm text-slate-300 mb-2">
+                  <div className="flex items-center gap-2 text-sm text-slate-300 mb-1">
                     <User className="w-4 h-4" />
-                    <span>{item.userName}</span>
+                    {item.userName}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-slate-400 mb-2">
+                  <div className="flex items-center gap-2 text-sm text-slate-400 mb-1">
                     <Mail className="w-4 h-4" />
-                    <span>{item.email}</span>
+                    {item.email}
                   </div>
 
                   <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
                     <Calendar className="w-4 h-4" />
-                    <span>{item?.timestamp}</span>
+                    {item.timestamp}
                   </div>
 
-                  <div className="bg-slate-800/50 p-3 rounded-xl text-sm text-slate-200 leading-relaxed mb-4">
-                    <MessageCircle className="w-5 h-5 inline mr-2 text-blue-400" />
+                  <div className="bg-slate-800/50 p-3 rounded-xl text-sm mb-4">
+                    <MessageCircle className="inline w-4 h-4 mr-1 text-blue-400" />
                     {item.feedback}
                   </div>
 
-                  {item?.response.length > 0 &&
-                    item.response.map((response,i) => (
-                      <div key={i} className="bg-green-800/40 border border-green-700 p-3 rounded-md text-sm text-green-300 mt-2">
-                        <b>Admin Reply:</b> {response}
-                      </div>
-                    ))}
+                  {item.response?.map((res, i) => (
+                    <div
+                      key={i}
+                      className="bg-green-800/40 border border-green-700 p-3 rounded-md text-sm mt-2"
+                    >
+                      <b>Admin Reply:</b> {res}
+                    </div>
+                  ))}
                 </div>
 
                 {activeReply === item.id ? (
-                  <div className="mt-4 flex flex-col  gap-2">
+                  <div className="mt-4 space-y-2">
                     <textarea
-                      placeholder="Write your reply..."
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-600 rounded-lg p-2 text-slate-200 text-sm resize-none"
+                      className="w-full bg-slate-800 border border-slate-600 rounded-lg p-2 text-sm resize-none"
                       rows={3}
                     />
-                    <div className="flex justify-between w-full p-2 gap-2">
+
+                    <div className="flex gap-2">
                       <Button
-                        onClick={() => handleReply(item.id, items.id)}
-                        disabled={!replyText.trim() || isLoading}
-                        className="bg-blue-600 hover:bg-blue-700 text-white "
+                        onClick={() => handleReply(item.id, group.id)}
+                        disabled={!replyText.trim() || isSending}
+                        className="bg-blue-600 hover:bg-blue-700"
                       >
-                        {!isLoading ? (
-                          <Send className="w-4 h-4 mr-1" />
-                        ) : (
-                          <Spinner show={isLoading} />
-                        )}{" "}
+                        {isSending ? <Spinner show /> : <Send className="w-4 h-4 mr-1" />}
                         Send
                       </Button>
+
                       <Button
                         variant="secondary"
-                        className="bg-slate-600 text-white hover:bg-slate-700"
                         onClick={() => setActiveReply(null)}
                       >
                         Cancel
@@ -136,7 +151,7 @@ const FeedBackView = () => {
                 ) : (
                   <Button
                     onClick={() => setActiveReply(item.id)}
-                    className="bg-slate-600 hover:bg-blue-600 text-white mt-3"
+                    className="bg-slate-600 hover:bg-blue-600 mt-3"
                   >
                     Reply
                   </Button>
