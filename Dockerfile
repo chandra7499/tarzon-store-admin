@@ -1,7 +1,7 @@
 # -----------------------
 # Build Stage
 # -----------------------
-FROM node:24-alpine AS builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
@@ -49,9 +49,9 @@ ENV NEXT_PUBLIC_ALGOLIA_SEARCH_KEY=${NEXT_PUBLIC_ALGOLIA_SEARCH_KEY}
 COPY package*.json ./
 
 RUN npm config set fetch-retry-maxtimeout 600000 \
- && npm config set fetch-retry-mintimeout 20000 \
- && npm config set registry https://registry.npmmirror.com \
- && npm ci --legacy-peer-deps
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set registry https://registry.npmmirror.com \
+    && npm ci --legacy-peer-deps
 
 RUN npm install
 
