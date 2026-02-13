@@ -24,6 +24,9 @@ jobs:
       FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
       EMAIL_USER: ${{ secrets.EMAIL_USER }}
       EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+      NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}
+      NEXT_PUBLIC_ALGOLIA_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}
+
     
 
     steps:
@@ -52,6 +55,8 @@ jobs:
             --build-arg FIREBASE_PRIVATE_KEY="$FIREBASE_PRIVATE_KEY" \
             --build-arg EMAIL_USER="$EMAIL_USER" \
             --build-arg EMAIL_PASS="$EMAIL_PASS" \
+            --build-arg NEXT_PUBLIC_ALGOLIA_APP_ID="$NEXT_PUBLIC_ALGOLIA_APP_ID" \
+            --build-arg NEXT_PUBLIC_ALGOLIA_SEARCH_KEY="$NEXT_PUBLIC_ALGOLIA_SEARCH_KEY" \
             -t ${{ secrets.DOCKER_USERNAME }}/tarzon_store_admin:latest .
 
       - name: Push Docker image
