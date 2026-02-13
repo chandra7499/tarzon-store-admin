@@ -53,7 +53,6 @@ RUN npm config set fetch-retry-maxtimeout 600000 \
     && npm config set registry https://registry.npmmirror.com \
     && npm ci --legacy-peer-deps
 
-RUN npm install
 
 COPY . .
 
