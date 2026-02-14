@@ -15,16 +15,17 @@ export const metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="p-6 space-y-6 flex-1   justify-center">
+    <div className="p-6 space-y-6 flex-1 w-full min-w-0 overflow-x-hidden">
       <TrendingCarousel />
       <BrandScroll />
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
         <RevenueSection />
         <UserVisitedGraph />
         <OfferZone />
       </div>
-      <div className="grid md:grid-cols-2 gap-4">
+
+      <div className="grid md:grid-cols-2 gap-4 min-w-0">
         <MonthlyNewUsers />
         <DailyTraffic />
       </div>

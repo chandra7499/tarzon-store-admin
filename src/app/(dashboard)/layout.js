@@ -3,17 +3,17 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function DashboardLayout({ children }) {
   return (
-    <div className="flex w-full">
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full">
-          <SideBar />
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full overflow-hidden">
+        <SideBar />
 
-          <main className="flex w-full">
-            <SidebarTrigger className="sticky top-1 cursor-pointer" />
-            {children}
-          </main>
-        </div>
-      </SidebarProvider>
-    </div>
+        {/* Main Content */}
+        <main className="flex-1 min-w-0 overflow-x-hidden">
+          <SidebarTrigger className="sticky top-2 ml-2 cursor-pointer" />
+
+          {children}
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }

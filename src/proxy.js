@@ -1,8 +1,8 @@
 // src/proxy.js
 import { NextResponse } from "next/server";
 
-export function  proxy(req) {
-  const token =  req.cookies.get("admin_token")?.value;
+export function proxy(req) {
+  const token = req.cookies.get("admin_token")?.value;
   const { pathname } = req.nextUrl;
 
   // Always allow APIs
@@ -14,7 +14,7 @@ export function  proxy(req) {
   if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
-  
+
   // Allow Next.js internals
   if (
     pathname.startsWith("/_next") ||
@@ -34,5 +34,10 @@ export function  proxy(req) {
 }
 
 export const config = {
-  matcher: ["/dashboard", "/orders/:path*", "/products/:path*", "/settings/:path*"],
+  matcher: [
+    "/dashboard",
+    "/orders/:path*",
+    "/products/:path*",
+    "/settings/:path*",
+  ],
 };
